@@ -94,7 +94,7 @@ def main():
                     course = ""
 
                 if (" ".join((data[i], data[i+1],
-                data[i+2])) == "Test Credit Total:"):
+                    data[i+2])) == "Test Credit Total:"):
                     total_credits = " ".join((data[i], data[i+1],
                                         data[i+2], data[i+3]))
                     test_credits.append(total_credits)
