@@ -5,6 +5,7 @@ import sys
 import os
 
 
+
 # :x should be a course number like 1000 but sometimes it may end with
 # a T like 1000T
 def is_integer(x):
@@ -16,13 +17,6 @@ def is_integer(x):
     except ValueError:
         return False
 
-# :x should be course credits like 3.00
-def is_float(x):
-    try:
-        float(x)
-        return True
-    except ValueError:
-        return False
 
 def main():
     # creating a pdf file object
@@ -56,7 +50,6 @@ def main():
     transfer_credits = ['Transfer Credit from']
     uva_credits = ['Beginning of Undergraduate Record']
 
-    # :TODO check if student has test/transfer credits
     # record test credit like so:
     # course acronym + course number + credits worth
     # record transfer credit like so:
@@ -66,6 +59,7 @@ def main():
 
     headers = {'Test Credits Applied': 1, 'Transfer Credit from': 2,
         'Beginning of Undergraduate': 3}
+    course = ""
 
     for i in range(0, len(data)):
         # ignore student name + date
@@ -85,50 +79,68 @@ def main():
 
             # counter == 1 if current section is test credits
             if counter == 1:
-                if data[i].isupper() and data[i] != "PT" and data[i] != "TE":
+                if (data[i].isupper() and data[i] != "PT" and
+                    data[i] != "TE"):
                     # double check that next element is the course number
                     course_num = data[i+1] if is_integer(data[i+1]) else ""
-                    credits_num = data[i+4] if is_float(data[i+4]) else ""
-                    course = " ".join((data[i], course_num))
+                    tmp_course = " ".join((data[i], course_num))
+                    course += tmp_course
 
-                    if len(course) > 4:
-                        test_credits.append(course)
+                if data[i] == "PT" or data[i] == "TE":
+                    course += " " + data[i+1]
 
-                if " ".join((data[i], data[i+1],
-                data[i+2])) == "Test Credit Total:":
+                if "." in course[-5:]:
+                    test_credits.append(course)
+                    course = ""
+
+                if (" ".join((data[i], data[i+1],
+                data[i+2])) == "Test Credit Total:"):
                     total_credits = " ".join((data[i], data[i+1],
                                         data[i+2], data[i+3]))
                     test_credits.append(total_credits)
 
             # counter == 3 if current section is transfer credits
             if counter == 3:
-                if data[i].isupper() and data[i] != "PT" and data[i] != "TE":
+                if (data[i].isupper() and data[i] != "PT" and
+                    data[i] != "TE"):
                     if data[i-1] == "as":
                         # double check that next element is the course number
                         course_num = data[i+1] if is_integer(data[i+1]) else ""
-                        credits_num = data[i+4] if is_float(data[i+4]) else ""
-                        course = " ".join((data[i], course_num))
+                        tmp_course = " ".join((data[i], course_num))
+                        course += tmp_course
 
-                        if len(course) > 4:
-                            transfer_credits.append(course)
+                if data[i] == "PT" or data[i] == "TE":
+                    course += " " + data[i+1]
 
-                if " ".join((data[i], data[i+1],
-                data[i+2])) == "Transfer Credit Total:":
+                if "." in course[-5:]:
+                    transfer_credits.append(course)
+                    course = ""
+
+                if (" ".join((data[i], data[i+1],
+                    data[i+2])) == "Transfer Credit Total:"):
                     total_credits = " ".join((data[i], data[i+1],
                                         data[i+2], data[i+3]))
                     transfer_credits.append(total_credits)
 
             # counter == 6 if current section is uva credits
             if counter == 6:
-                if data[i].isupper() and data[i] != "PT" and data[i] != "TE":
+                if (data[i].isupper() and data[i] != "PT" and
+                    data[i] != "TE"):
                     # double check that next element is the course number
                     course_num = data[i+1] if is_integer(data[i+1]) else ""
-                    grade = ""
-                    credits_num = data[i+4] if is_float(data[i+4]) else ""
-                    course = " ".join((data[i], course_num))
+                    tmp_course = " ".join((data[i], course_num))
+                    proper_tmp_course = tmp_course.split()
+                    if len(proper_tmp_course) > 1:
+                        if (proper_tmp_course[0].isupper() and
+                            is_integer(proper_tmp_course[1])):
+                            course += " ".join(proper_tmp_course)
 
-                    if len(course) > 4:
+                if ("." in data[i] and len(data[i]) == 3):
+                    grade = data[i-1] if len(data[i-1]) < 3 else ""
+                    course += " " + " ".join((grade, data[i]))
+                    if course[0] != " ":
                         uva_credits.append(course)
+                    course = ""
 
     # write all data to csv file
     with open('transcript.csv', mode='w') as transcript_file:
@@ -155,6 +167,7 @@ def main():
 
     # closing the pdf file object
     pdf_input.close()
+
 
 
 if __name__=="__main__":
