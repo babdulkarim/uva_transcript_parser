@@ -41,11 +41,16 @@ def main():
 
     # we assume student name, date, and footer are constant in every
     # transcript
-    student_name = [" ".join(data[:2])]
-    date = data[2:3]
+
+    header_constants = data[:5]
+    tmp_date = "".join([n for n in header_constants if '/' in n])
+    date_index = header_constants.index(tmp_date)
+    student_name = [" ".join(header_constants[:date_index])]
+    date = [tmp_date]
     end_footer = [" ".join(data[len(data)-4:])]
 
-    counter = 0
+
+    counter = ['na']
     test_credits = ['Test Credits Applied']
     transfer_credits = ['Transfer Credit from']
     uva_credits = ['Beginning of Undergraduate Record']
@@ -57,28 +62,32 @@ def main():
     # record UVA credits like so:
     # course acronym + course number + grade received + credits worth
 
-    headers = {'Test Credits Applied': 1, 'Transfer Credit from': 2,
-        'Beginning of Undergraduate': 3}
+    headers = {'Test Credits Applied': 'tca', 'Transfer Credit from': 'tcf',
+        'Beginning of Undergraduate': 'bou'}
     course = ""
 
     for i in range(0, len(data)):
         # ignore student name + date
-        if i < 3: continue
+        if i < 4: continue
         # ignore footer
         elif i >= (len(data)-4): continue
         # iterate on transcript data
         else:
 
             tmp_header = " ".join((data[i], data[i+1], data[i+2]))
-            # section = subheader of transcript e.g.
+            # section == subheader of transcript e.g.
             # test credits/transfer credits/uva credits
             section = headers.get(tmp_header)
 
             if section is not None:
-                counter += section
+                # last element of the counter list specifies
+                # which section the subheader currently is
+                counter.append(section)
 
-            # counter == 1 if current section is test credits
-            if counter == 1:
+
+            # ''.join(counter[:-1]) == 'tca'
+            # IFF current section is test credits
+            if ''.join(counter[-1:]) == 'tca':
                 if (data[i].isupper() and data[i] != "PT" and
                     data[i] != "TE"):
                     # double check that next element is the course number
@@ -99,8 +108,9 @@ def main():
                                         data[i+2], data[i+3]))
                     test_credits.append(total_credits)
 
-            # counter == 3 if current section is transfer credits
-            if counter == 3:
+            # ''.join(counter[:-1]) == 'tcf'
+            # IFF current section is transfer credits
+            if ''.join(counter[-1:]) == 'tcf':
                 if (data[i].isupper() and data[i] != "PT" and
                     data[i] != "TE"):
                     if data[i-1] == "as":
@@ -122,8 +132,9 @@ def main():
                                         data[i+2], data[i+3]))
                     transfer_credits.append(total_credits)
 
-            # counter == 6 if current section is uva credits
-            if counter == 6:
+            # ''.join(counter[:-1]) == 'bou'
+            # IFF current section is uva credits
+            if ''.join(counter[-1:]) == 'bou':
                 if (data[i].isupper() and data[i] != "PT" and
                     data[i] != "TE"):
                     # double check that next element is the course number
